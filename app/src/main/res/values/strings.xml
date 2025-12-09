@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">JikanAnimeApp</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="offline_mode_showing_cached_data">Offline mode – showing cached data</string>
+    <string name="anime_poster">Anime poster</string>
+    <string name="no_synopsis_available">No synopsis available.</string>
+</resources>
