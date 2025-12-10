@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.transition.Visibility
 import com.bumptech.glide.Glide
@@ -19,17 +20,24 @@ import com.ktorlib.jikananimeapp.R
 import com.ktorlib.jikananimeapp.data.local.AnimeDatabase
 import com.ktorlib.jikananimeapp.data.remote.RetrofitClient
 import com.ktorlib.jikananimeapp.data.repository.AnimeRepository
+import com.ktorlib.jikananimeapp.databinding.FragmentAnimeDetailBinding
+import com.ktorlib.jikananimeapp.databinding.FragmentAnimeListBinding
 import com.ktorlib.jikananimeapp.util.Constants.DEFAULT_EPISODES
 import com.ktorlib.jikananimeapp.util.Constants.KEY_ANIME_ID
 import com.ktorlib.jikananimeapp.util.Constants.KEY_ANIME_POSTER
 import com.ktorlib.jikananimeapp.util.Constants.NO_DATA
+import com.ktorlib.jikananimeapp.util.NetworkUtil
 
 
 class AnimeDetailFragment : Fragment(R.layout.fragment_anime_detail) {
 
     private var player: ExoPlayer? = null
+    private var _binding: FragmentAnimeDetailBinding? = null
+    private val binding get() = _binding!!
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        _binding = FragmentAnimeDetailBinding.bind(view)
 
         val animeId = requireArguments().getInt(KEY_ANIME_ID)
         val posterUrl = requireArguments().getString(KEY_ANIME_POSTER)
@@ -41,47 +49,44 @@ class AnimeDetailFragment : Fragment(R.layout.fragment_anime_detail) {
 
         val vm = AnimeDetailViewModel(repo)
 
-        val posterImage = view.findViewById<ImageView>(R.id.posterImage)
-        val title = view.findViewById<TextView>(R.id.title)
-        val info = view.findViewById<TextView>(R.id.info)
-        val synopsis = view.findViewById<TextView>(R.id.synopsis)
-        val container = view.findViewById<View>(R.id.videoContainer)
-        val genreGroup = view.findViewById<ChipGroup>(R.id.genreGroup)
+        if (NetworkUtil.isOnline(requireContext())) {
+            vm.load(animeId).observe(viewLifecycleOwner) { data ->
 
+                binding.title.text = data.title
+                binding.info.text =
+                    "⭐ ${data.score ?: NO_DATA} | Episodes: ${data.episodes ?: DEFAULT_EPISODES}"
+                binding.synopsis.text = data.synopsis ?: resources.getString(R.string.no_synopsis_available)
+                //  Show poster first
+                Glide.with(requireContext())
+                    .load(posterUrl)
+                    .into(binding.posterImage)
 
-        vm.load(animeId).observe(viewLifecycleOwner) { data ->
+                //  Handle trailer safely
+                val trailerUrl = data.trailer?.url
 
-            title.text = data.title
-            info.text = "⭐ ${data.score ?: NO_DATA} | Episodes: ${data.episodes ?: DEFAULT_EPISODES}"
-            synopsis.text = data.synopsis ?: resources.getString(R.string.no_synopsis_available)
-            // ✅ Show poster first
-            Glide.with(requireContext())
-                .load(posterUrl)
-                .into(posterImage)
+                if (!trailerUrl.isNullOrEmpty()) {
+                    player = ExoPlayer.Builder(requireContext()).build()
+                    val playerView = PlayerView(requireContext())
+                    playerView.player = player
+                    binding.videoContainer as ViewGroup
+                    binding.videoContainer.addView(playerView)
 
-            // ✅ Handle trailer safely
-            val trailerUrl = data.trailer?.url
+                    player?.setMediaItem(MediaItem.fromUri(Uri.parse(trailerUrl)))
+                    player?.prepare()
+                } else {
+                    binding.posterImage.visibility = View.VISIBLE
+                }
 
-            if (!trailerUrl.isNullOrEmpty()) {
-                player = ExoPlayer.Builder(requireContext()).build()
-                val playerView = PlayerView(requireContext())
-                playerView.player = player
-                container as ViewGroup
-                container.addView(playerView)
-
-                player?.setMediaItem(MediaItem.fromUri(Uri.parse(trailerUrl)))
-                player?.prepare()
-            } else {
-                posterImage.visibility = View.VISIBLE
+                data.genres.forEach { genre ->
+                    val chip = Chip(requireContext())
+                    chip.text = genre.name
+                    chip.isClickable = false
+                    chip.isCheckable = false
+                    binding.genreGroup.addView(chip)
+                }
             }
-
-            data.genres.forEach { genre ->
-                val chip = Chip(requireContext())
-                chip.text = genre.name
-                chip.isClickable = false
-                chip.isCheckable = false
-                genreGroup.addView(chip)
-            }
+        } else {
+            Toast.makeText(requireContext(),requireContext().getString(R.string.no_internet_available), Toast.LENGTH_SHORT).show()
         }
     }
 

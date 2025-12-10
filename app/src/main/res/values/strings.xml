@@ -5,4 +5,5 @@
     <string name="offline_mode_showing_cached_data">Offline mode – showing cached data</string>
     <string name="anime_poster">Anime poster</string>
     <string name="no_synopsis_available">No synopsis available.</string>
+    <string name="no_internet_available">No internet available.</string>
 </resources>

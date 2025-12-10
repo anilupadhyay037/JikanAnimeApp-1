@@ -1,14 +1,11 @@
 package com.ktorlib.jikananimeapp.ui.list
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.ktorlib.jikananimeapp.R
 import com.ktorlib.jikananimeapp.data.local.AnimeEntity
+import com.ktorlib.jikananimeapp.databinding.RowAnimeBinding
 import com.ktorlib.jikananimeapp.util.Constants.DEFAULT_EPISODES
 import com.ktorlib.jikananimeapp.util.Constants.IMAGE_PLACEHOLDER
 import com.ktorlib.jikananimeapp.util.Constants.NO_DATA
@@ -23,9 +20,13 @@ class AnimeAdapter(
         parent: ViewGroup,
         viewType: Int
     ): AnimeViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.row_anime, parent, false)
-        return AnimeViewHolder(view)
+        val binding = RowAnimeBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return AnimeViewHolder(binding)
+
     }
 
     override fun onBindViewHolder(holder: AnimeViewHolder, position: Int) {
@@ -40,24 +41,15 @@ class AnimeAdapter(
         notifyDataSetChanged() // 🔥 REQUIRED
     }
 
-    inner class AnimeViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
+    inner class AnimeViewHolder(private val binding: RowAnimeBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
-        private val poster: ImageView =
-            itemView.findViewById(R.id.poster)
-
-        private val title: TextView =
-            itemView.findViewById(R.id.title)
-        private val meta: TextView =
-            itemView.findViewById(R.id.meta)
-
-        fun bind(item: AnimeEntity) {
+        fun bind(item: AnimeEntity) = with(binding) {
 
             title.text = item.title
-            meta.text =
-                "⭐ ${item.score ?: NO_DATA} | Ep ${item.episodes ?: DEFAULT_EPISODES}"
+            meta.text = "⭐ ${item.score ?: NO_DATA} | Ep ${item.episodes ?: DEFAULT_EPISODES}"
 
-            // ✅ Load image from Room URL
+            //  Load image from Room URL
             Glide.with(itemView.context)
                 .load(item.poster)
                 .placeholder(IMAGE_PLACEHOLDER)
