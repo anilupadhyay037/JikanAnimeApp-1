@@ -1,11 +1,11 @@
-# Jikan Anime App 🎌
+# Jikan Anime App 
 
 An offline-first Android application built using the **Jikan API** to display popular anime series.  
 The app follows **MVVM architecture** and uses modern Android libraries such as **Retrofit, Room, WorkManager, and Glide**.
 
 ---
 
-## 📱 Features Implemented
+## Features Implemented
 
 ### Anime List (Home Screen)
 - Fetches **Top Anime** from Jikan API
